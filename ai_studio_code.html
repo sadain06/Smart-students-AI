@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartCampus AI — University Management & Learning Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React 18 & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone for JSX compilation in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // ==========================================
+    // 1. INLINE SVG ICONS (NO CDN DEPENDENCY)
+    // ==========================================
+    const Icon = ({ name, className = "w-5 h-5" }) => {
+      const icons = {
+        dashboard: <path d="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z"/>,
+        user: <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>,
+        calendar: <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>,
+        checkCircle: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>,
+        award: <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>,
+        book: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>,
+        bell: <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>,
+        bot: <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>,
+        quiz: <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>,
+        fileText: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>,
+        alertTriangle: <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>,
+        search: <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>,
+        sun: <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>,
+        moon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>,
+        logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>,
+        send: <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>,
+        copy: <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>,
+        plus: <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>,
+        trash: <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>,
+        shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      };
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          {icons[name] || <circle cx="12" cy="12" r="10" />}
+        </svg>
+      );
+    };
+
+    // ==========================================
+    // 2. SEED DATABASE & LOCALSTORAGE ENGINE
+    // ==========================================
+    const INITIAL_DB = {
+      users: [
+        { id: 'u1', email: 'student@smartcampus.edu', role: 'STUDENT', fullName: 'Alex Vance', studentId: 'CSE-2024-001', dept: 'CSE', batch: '54th', semester: 6 },
+        { id: 'u2', email: 'teacher@smartcampus.edu', role: 'TEACHER', fullName: 'Prof. Alan Turing', teacherId: 'T-CSE-01', dept: 'CSE', designation: 'Associate Professor' },
+        { id: 'u3', email: 'admin@smartcampus.edu', role: 'ADMIN', fullName: 'Dr. Sarah Mitchell', adminId: 'A-01', designation: 'Academic Dean' }
+      ],
+      courses: [
+        { id: 'c1', code: 'CSE-311', title: 'Database Management Systems', credits: 3.0, teacher: 'Prof. Alan Turing' },
+        { id: 'c2', code: 'CSE-313', title: 'Operating Systems & Architecture', credits: 3.0, teacher: 'Prof. Alan Turing' },
+        { id: 'c3', code: 'CSE-315', title: 'Artificial Intelligence & Neural Nets', credits: 3.0, teacher: 'Dr. John McCarthy' },
+        { id: 'c4', code: 'CSE-317', title: 'Computer Networks', credits: 3.0, teacher: 'Prof. Vint Cerf' }
+      ],
+      attendance: [
+        { courseId: 'c1', total: 24, present: 22 },  // 91.6%
+        { courseId: 'c2', total: 20, present: 18 },  // 90.0%
+        { courseId: 'c3', total: 22, present: 15 },  // 68.1% (Triggers Warning < 75%)
+        { courseId: 'c4', total: 18, present: 16 }   // 88.8%
+      ],
+      results: [
+        { semester: 5, code: 'CSE-301', title: 'Algorithms Design', credit: 3.0, marks: 87, grade: 'A+', gradePoint: 4.00 },
+        { semester: 5, code: 'CSE-303', title: 'Software Engineering', credit: 3.0, marks: 81, grade: 'A', gradePoint: 3.75 },
+        { semester: 5, code: 'CSE-305', title: 'Theory of Computation', credit: 3.0, marks: 76, grade: 'B+', gradePoint: 3.25 },
+        { semester: 4, code: 'CSE-201', title: 'Data Structures', credit: 3.0, marks: 92, grade: 'A+', gradePoint: 4.00 },
+        { semester: 4, code: 'CSE-203', title: 'Digital Logic Design', credit: 3.0, marks: 84, grade: 'A', gradePoint: 3.75 }
+      ],
+      routine: [
+        { day: 'Monday', time: '09:00 - 10:30', code: 'CSE-311', title: 'Database Systems', room: 'Lab 402', teacher: 'Prof. Turing' },
+        { day: 'Monday', time: '11:00 - 12:30', code: 'CSE-313', title: 'Operating Systems', room: 'Room 501', teacher: 'Prof. Turing' },
+        { day: 'Tuesday', time: '10:00 - 11:30', code: 'CSE-315', title: 'Artificial Intelligence', room: 'Room 303', teacher: 'Dr. McCarthy' },
+        { day: 'Wednesday', time: '09:00 - 10:30', code: 'CSE-317', title: 'Computer Networks', room: 'Lab 201', teacher: 'Prof. Cerf' },
+        { day: 'Thursday', time: '14:00 - 15:30', code: 'CSE-311', title: 'Database Systems Lab', room: 'Lab 402', teacher: 'Prof. Turing' }
+      ],
+      assignments: [
+        { id: 'a1', course: 'CSE-311', title: 'B+ Tree Index Simulation', deadline: '2026-10-28', status: 'Pending', description: 'Implement B+ Tree insertion & deletion algorithm in Python or C++.' },
+        { id: 'a2', course: 'CSE-313', title: 'Multithreaded Dining Philosophers', deadline: '2026-10-31', status: 'Submitted', description: 'Solve deadlock using POSIX mutex and semaphores.' },
+        { id: 'a3', course: 'CSE-315', title: 'A* Heuristic Search Implementation', deadline: '2026-10-15', status: 'Graded', score: 95, feedback: 'Excellent heuristic choice and documentation.' }
+      ],
+      notices: [
+        { id: 'n1', title: 'Final Semester Examination Schedule Fall 2026', date: '2026-10-18', category: 'Exam', author: 'Academic Dean Office', content: 'Examinations for all 6th and 8th semester departments commence from Nov 15th.' },
+        { id: 'n2', title: 'SmartCampus Hackathon 2026 Registrations', date: '2026-10-16', category: 'Event', author: 'CSE Club', content: 'Register your teams of 3-4 members for the 36-hour hackathon. Cash prizes up to $5,000.' },
+        { id: 'n3', title: 'Lab Maintenance & Upgrade Scheduled', date: '2026-10-12', category: 'Administrative', author: 'IT Support', content: 'Lab 402 and 201 will undergo hardware and GPU driver updates this coming weekend.' }
+      ],
+      notes: [
+        { id: 'nt1', title: 'ACID Properties & Serializability', category: 'Database', tags: 'dbms, transactions', content: 'Atomicity (WAL), Consistency (Invariants), Isolation (2PL, Snapshot), Durability (FSYNC).' },
+        { id: 'nt2', title: 'CPU Scheduling Algorithms Cheat Sheet', category: 'OS', tags: 'threads, scheduling', content: 'FCFS (Convoy effect), SJF (Optimal avg waiting time, starvation risk), Round Robin (Time quantum selection).' }
+      ],
+      quizHistory: [
+        { topic: 'Relational DBMS & SQL', score: 3, total: 3, percentage: 100, date: '2026-10-17' }
+      ]
+    };
+
+    // Load or bootstrap database
+    const loadDB = () => {
+      const data = localStorage.getItem('smartcampus_db_v1');
+      if (!data) {
+        localStorage.setItem('smartcampus_db_v1', JSON.stringify(INITIAL_DB));
+        return INITIAL_DB;
+      }
+      return JSON.parse(data);
+    };
+
+    const saveDB = (db) => {
+      localStorage.setItem('smartcampus_db_v1', JSON.stringify(db));
+    };
+
+    // ==========================================
+    // 3. MAIN APPLICATION COMPONENT
+    // ==========================================
+    function App() {
+      const [db, setDb] = useState(loadDB);
+      const [currentUser, setCurrentUser] = useState(() => db.users[0]); // default Alex Vance
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [darkMode, setDarkMode] = useState(false);
+      const [globalSearch, setGlobalSearch] = useState('');
+      const [showNotifications, setShowNotifications] = useState(false);
+
+      // Save database sync
+      useEffect(() => {
+        saveDB(db);
+      }, [db]);
+
+      // Toggle Dark Mode
+      const toggleTheme = () => {
+        setDarkMode(!darkMode);
+        document.documentElement.classList.toggle('dark');
+      };
+
+      // GPA/CGPA Calculators
+      const { semesterGPA, overallCGPA } = useMemo(() => {
+        const studentResults = db.results;
+        if (!studentResults.length) return { semesterGPA: '0.00', overallCGPA: '0.00' };
+
+        // Overall CGPA
+        const totalCredits = studentResults.reduce((acc, r) => acc + r.credit, 0);
+        const totalPoints = studentResults.reduce((acc, r) => acc + (r.credit * r.gradePoint), 0);
+        const cgpa = (totalPoints / totalCredits).toFixed(2);
+
+        // Current semester (Semester 5) GPA
+        const sem5 = studentResults.filter(r => r.semester === 5);
+        const sem5Credits = sem5.reduce((acc, r) => acc + r.credit, 0);
+        const sem5Points = sem5.reduce((acc, r) => acc + (r.credit * r.gradePoint), 0);
+        const sgpa = (sem5Points / sem5Credits).toFixed(2);
+
+        return { semesterGPA: sgpa, overallCGPA: cgpa };
+      }, [db.results]);
+
+      // Overall Attendance Calculation
+      const attendanceSummary = useMemo(() => {
+        return db.attendance.map(att => {
+          const course = db.courses.find(c => c.id === att.courseId);
+          const pct = Math.round((att.present / att.total) * 100);
+          return {
+            ...att,
+            courseCode: course ? course.code : 'Course',
+            courseTitle: course ? course.title : 'Unknown',
+            percentage: pct,
+            warning: pct < 75
+          };
+        });
+      }, [db.attendance, db.courses]);
+
+      const hasAttendanceAlert = attendanceSummary.some(a => a.warning);
+
+      // Handle Quick Role Switching for demo testing
+      const switchRole = (role) => {
+        const user = db.users.find(u => u.role === role);
+        if (user) {
+          setCurrentUser(user);
+          setActiveTab('dashboard');
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+          
+          {/* SIDEBAR NAVIGATION */}
+          <aside className="w-full md:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0 select-none">
+            <div className="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-black shadow-md shadow-brand-500/20">
+                  S
+                </div>
+                <div>
+                  <h1 className="font-extrabold text-base bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">SmartCampus AI</h1>
+                  <span className="text-[10px] tracking-widest text-slate-400 uppercase font-semibold">University Portal</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Role Switcher pills for easy grading/evaluation */}
+            <div className="px-4 pt-4 pb-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Switch Active Role</p>
+              <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl text-xs font-semibold">
+                <button
+                  onClick={() => switchRole('STUDENT')}
+                  className={`py-1.5 rounded-lg transition ${currentUser.role === 'STUDENT' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-sm' : 'text-slate-500'}`}
+                >Student</button>
+                <button
+                  onClick={() => switchRole('TEACHER')}
+                  className={`py-1.5 rounded-lg transition ${currentUser.role === 'TEACHER' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-sm' : 'text-slate-500'}`}
+                >Teacher</button>
+                <button
+                  onClick={() => switchRole('ADMIN')}
+                  className={`py-1.5 rounded-lg transition ${currentUser.role === 'ADMIN' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-sm' : 'text-slate-500'}`}
+                >Admin</button>
+              </div>
+            </div>
+
+            {/* Navigation links based on role */}
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar text-sm font-medium">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'dashboard' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+              >
+                <Icon name="dashboard" /> Dashboard
+              </button>
+
+              {currentUser.role === 'STUDENT' && (
+                <React.Fragment>
+                  <button
+                    onClick={() => setActiveTab('attendance')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition ${activeTab === 'attendance' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon name="checkCircle" /> Attendance
+                    </div>
+                    {hasAttendanceAlert && (
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('results')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'results' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="award" /> Results & GPA
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('routine')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'routine' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="calendar" /> Class Routine
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('assignments')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'assignments' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="book" /> Assignments
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('notes')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'notes' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="fileText" /> Smart Notes
+                  </button>
+
+                  <div className="pt-3 pb-1">
+                    <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">AI Study Hub</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('ai-chat')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'ai-chat' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="bot" /> AI Study Assistant
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('ai-quiz')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'ai-quiz' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="quiz" /> AI Quiz Generator
+                  </button>
+                </React.Fragment>
+              )}
+
+              {currentUser.role === 'TEACHER' && (
+                <React.Fragment>
+                  <button
+                    onClick={() => setActiveTab('teacher-attendance')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'teacher-attendance' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="checkCircle" /> Mark Attendance
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('teacher-results')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'teacher-results' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="award" /> Upload Results
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('assignments')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'assignments' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="book" /> Manage Assignments
+                  </button>
+                </React.Fragment>
+              )}
+
+              {currentUser.role === 'ADMIN' && (
+                <React.Fragment>
+                  <button
+                    onClick={() => setActiveTab('admin-users')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'admin-users' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="user" /> User Management
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('admin-courses')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'admin-courses' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+                  >
+                    <Icon name="book" /> Course Directory
+                  </button>
+                </React.Fragment>
+              )}
+
+              <button
+                onClick={() => setActiveTab('notices')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${activeTab === 'notices' ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'}`}
+              >
+                <Icon name="bell" /> Notice Board
+              </button>
+            </nav>
+
+            {/* User Profile Card */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-700/40 rounded-2xl">
+                <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300 flex items-center justify-center font-bold text-sm">
+                  {currentUser.fullName[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">{currentUser.fullName}</p>
+                  <p className="text-[11px] text-slate-400 capitalize">{currentUser.role.toLowerCase()}</p>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* MAIN CONTENT REGION */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Top Navbar */}
+            <header className="h-16 px-6 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 z-20">
+              <div className="flex items-center gap-3 w-1/3">
+                <div className="relative w-full max-w-xs">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Icon name="search" className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="text"
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                    placeholder="Search courses, notices, notes..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-slate-100 dark:bg-slate-700/60 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleTheme}
+                  title="Toggle Dark/Light Mode"
+                  className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                >
+                  <Icon name={darkMode ? 'sun' : 'moon'} className="w-5 h-5" />
+                </button>
+
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition relative"
+                  >
+                    <Icon name="bell" className="w-5 h-5" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>
+                  </button>
+
+                  {/* Notifications Popover */}
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 z-50">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Live Notifications</h4>
+                      <div className="space-y-2 text-xs">
+                        {hasAttendanceAlert && (
+                          <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-900">
+                            <strong>Attendance Warning:</strong> CSE-315 attendance is 68.1% (Below 75%).
+                          </div>
+                        )}
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 text-slate-700 dark:text-slate-200">
+                          <strong>Assignment Deadline:</strong> B+ Tree Indexing due in 7 days.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </header>
+
+            {/* Content Viewport */}
+            <main className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  user={currentUser}
+                  db={db}
+                  attendanceSummary={attendanceSummary}
+                  hasAttendanceAlert={hasAttendanceAlert}
+                  semesterGPA={semesterGPA}
+                  overallCGPA={overallCGPA}
+                  onNavigate={setActiveTab}
+                />
+              )}
+
+              {activeTab === 'attendance' && (
+                <AttendanceView summary={attendanceSummary} />
+              )}
+
+              {activeTab === 'results' && (
+                <ResultsView
+                  results={db.results}
+                  semesterGPA={semesterGPA}
+                  overallCGPA={overallCGPA}
+                />
+              )}
+
+              {activeTab === 'routine' && (
+                <RoutineView routine={db.routine} />
+              )}
+
+              {activeTab === 'assignments' && (
+                <AssignmentsView
+                  assignments={db.assignments}
+                  user={currentUser}
+                  onUpdateAssignments={(updated) => setDb({ ...db, assignments: updated })}
+                />
+              )}
+
+              {activeTab === 'notices' && (
+                <NoticesView
+                  notices={db.notices}
+                  user={currentUser}
+                  onAddNotice={(n) => setDb({ ...db, notices: [n, ...db.notices] })}
+                />
+              )}
+
+              {activeTab === 'notes' && (
+                <NotesView
+                  notes={db.notes}
+                  onUpdateNotes={(nts) => setDb({ ...db, notes: nts })}
+                />
+              )}
+
+              {activeTab === 'ai-chat' && (
+                <AIChatView />
+              )}
+
+              {activeTab === 'ai-quiz' && (
+                <AIQuizView
+                  history={db.quizHistory}
+                  onSaveResult={(res) => setDb({ ...db, quizHistory: [res, ...db.quizHistory] })}
+                />
+              )}
+
+              {activeTab === 'teacher-attendance' && (
+                <TeacherAttendanceView
+                  db={db}
+                  onUpdateAttendance={(updated) => setDb({ ...db, attendance: updated })}
+                />
+              )}
+
+              {activeTab === 'teacher-results' && (
+                <TeacherResultsView
+                  db={db}
+                  onAddResult={(res) => setDb({ ...db, results: [res, ...db.results] })}
+                />
+              )}
+
+              {activeTab === 'admin-users' && (
+                <AdminUsersView
+                  users={db.users}
+                  onAddUser={(u) => setDb({ ...db, users: [...db.users, u] })}
+                  onDeleteUser={(id) => setDb({ ...db, users: db.users.filter(u => u.id !== id) })}
+                />
+              )}
+
+              {activeTab === 'admin-courses' && (
+                <AdminCoursesView
+                  courses={db.courses}
+                  onAddCourse={(c) => setDb({ ...db, courses: [...db.courses, c] })}
+                />
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 4. TAB VIEWS & SUB-COMPONENTS
+    // ==========================================
+
+    // --- DASHBOARD VIEW ---
+    function DashboardView({ user, db, attendanceSummary, hasAttendanceAlert, semesterGPA, overallCGPA, onNavigate }) {
+      if (user.role === 'TEACHER') {
+        return (
+          <div className="space-y-6 max-w-6xl mx-auto">
+            <div className="p-6 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-3xl text-white shadow-lg">
+              <span className="text-xs uppercase font-bold tracking-widest text-indigo-200">Teacher Portal</span>
+              <h2 className="text-2xl font-bold mt-1">Welcome, {user.fullName}</h2>
+              <p className="text-xs text-indigo-100 mt-1">{user.designation} • Department of {user.dept}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Assigned Courses</span>
+                <p className="text-3xl font-extrabold mt-2 text-brand-600">3</p>
+                <p className="text-xs text-slate-400 mt-1">Fall 2026</p>
+              </div>
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Pending Submissions</span>
+                <p className="text-3xl font-extrabold mt-2 text-amber-500">14</p>
+                <p className="text-xs text-slate-400 mt-1">Requires review & marks</p>
+              </div>
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Total Students</span>
+                <p className="text-3xl font-extrabold mt-2 text-emerald-500">120</p>
+                <p className="text-xs text-slate-400 mt-1">Across 3 sections</p>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+              <h3 className="text-base font-bold mb-4">Quick Academic Actions</h3>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => onNavigate('teacher-attendance')}
+                  className="px-4 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold hover:bg-brand-700 transition"
+                >
+                  Mark Today's Attendance
+                </button>
+                <button
+                  onClick={() => onNavigate('teacher-results')}
+                  className="px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/40 text-brand-600 dark:text-brand-300 rounded-xl text-xs font-bold transition"
+                >
+                  Upload Semester Marks
+                </button>
+                <button
+                  onClick={() => onNavigate('assignments')}
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition"
+                >
+                  Create New Assignment
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (user.role === 'ADMIN') {
+        return (
+          <div className="space-y-6 max-w-6xl mx-auto">
+            <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl text-white shadow-lg border border-slate-700">
+              <span className="text-xs uppercase font-bold tracking-widest text-indigo-400">Institutional Control Center</span>
+              <h2 className="text-2xl font-bold mt-1">University Administration Overview</h2>
+              <p className="text-xs text-slate-300 mt-1">SmartCampus AI Core Management System</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Total Students</span>
+                <p className="text-2xl font-extrabold mt-1 text-brand-600">1,480</p>
+              </div>
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Faculty Members</span>
+                <p className="text-2xl font-extrabold mt-1 text-indigo-600">92</p>
+              </div>
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Departments</span>
+                <p className="text-2xl font-extrabold mt-1 text-emerald-600">8</p>
+              </div>
+              <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <span className="text-xs font-bold text-slate-400 uppercase">Active Courses</span>
+                <p className="text-2xl font-extrabold mt-1 text-amber-600">{db.courses.length}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <h3 className="font-bold text-sm mb-3">System Health & AI Tutor Engine</h3>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-700">
+                    <span className="text-slate-400">Database Engine</span>
+                    <span className="font-bold text-emerald-500">Online (Synced)</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-700">
+                    <span className="text-slate-400">AI Knowledge Assistant</span>
+                    <span className="font-bold text-emerald-500">Active (Heuristic + LLM ready)</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-400">Academic Semester</span>
+                    <span className="font-bold">Fall 2026 (Week 7)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <h3 className="font-bold text-sm mb-3">Direct Management Actions</h3>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => onNavigate('admin-users')} className="p-3 text-left rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 text-xs font-bold flex justify-between items-center">
+                    Manage University User Roster <span>→</span>
+                  </button>
+                  <button onClick={() => onNavigate('admin-courses')} className="p-3 text-left rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 text-xs font-bold flex justify-between items-center">
+                    Department Course Allocation <span>→</span>
+                  </button>
+                  <button onClick={() => onNavigate('notices')} className="p-3 text-left rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 text-xs font-bold flex justify-between items-center">
+                    Broadcast Official University Notice <span>→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // Default: STUDENT DASHBOARD
+      return (
+        <div className="space-y-6 max-w-6xl mx-auto">
+          {/* Welcome Card */}
+          <div className="p-6 md:p-8 bg-gradient-to-r from-brand-600 via-indigo-600 to-blue-600 rounded-3xl text-white shadow-xl relative overflow-hidden">
+            <span className="text-xs uppercase font-bold tracking-widest text-indigo-200">Student Portal</span>
+            <h2 className="text-2xl md:text-3xl font-extrabold mt-1">Hello, {user.fullName} 👋</h2>
+            <p className="text-xs md:text-sm text-indigo-100 mt-2 max-w-xl">
+              Student ID: <span className="font-semibold text-white">{user.studentId}</span> • Dept. of {user.dept} ({user.batch} Batch, Semester {user.semester})
+            </p>
+          </div>
+
+          {/* Attendance Alert Notification Banner */}
+          {hasAttendanceAlert && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-3 text-amber-800 dark:text-amber-200 text-xs md:text-sm">
+              <Icon name="alertTriangle" className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <strong>Attendance Warning:</strong> One or more of your registered courses has fallen below the 75% mandatory threshold. Please consult your course instructor.
+              </div>
+            </div>
+          )}
+
+          {/* Metric Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Current GPA</span>
+              <p className="text-2xl md:text-3xl font-extrabold mt-2 text-brand-600">{semesterGPA}</p>
+              <span className="text-[11px] text-slate-400">Semester 5</span>
+            </div>
+
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cumulative CGPA</span>
+              <p className="text-2xl md:text-3xl font-extrabold mt-2 text-indigo-600">{overallCGPA}</p>
+              <span className="text-[11px] text-emerald-600 font-semibold">Scale: 4.00</span>
+            </div>
+
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending Tasks</span>
+              <p className="text-2xl md:text-3xl font-extrabold mt-2 text-amber-500">
+                {db.assignments.filter(a => a.status === 'Pending').length}
+              </p>
+              <span className="text-[11px] text-slate-400">Assignments Due</span>
+            </div>
+
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Registered Courses</span>
+              <p className="text-2xl md:text-3xl font-extrabold mt-2 text-emerald-500">{db.courses.length}</p>
+              <span className="text-[11px] text-slate-400">Fall Term 2026</span>
+            </div>
+          </div>
+
+          {/* Quick Schedule & Attendance Glance */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-sm">Attendance Summary</h3>
+                <button onClick={() => onNavigate('attendance')} className="text-xs text-brand-600 font-bold hover:underline">View All</button>
+              </div>
+              <div className="space-y-3">
+                {attendanceSummary.slice(0, 3).map((item) => (
+                  <div key={item.courseId} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold">{item.courseCode} ({item.courseTitle})</span>
+                      <span className={`font-bold ${item.warning ? 'text-rose-500' : 'text-slate-600 dark:text-slate-300'}`}>{item.percentage}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.warning ? 'bg-rose-500' : 'bg-brand-600'}`}
+                        style={{ width: `${item.percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-sm">Today's Class Schedule</h3>
+                <button onClick={() => onNavigate('routine')} className="text-xs text-brand-600 font-bold hover:underline">Full Routine</button>
+              </div>
+              <div className="space-y-2.5">
+                {db.routine.slice(0, 2).map((item, idx) => (
+                  <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl text-xs flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-slate-800 dark:text-slate-100">{item.code}: {item.title}</p>
+                      <p className="text-slate-400 mt-0.5">{item.room} • {item.teacher}</p>
+                    </div>
+                    <span className="px-2.5 py-1 bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 rounded-lg font-semibold">
+                      {item.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- ATTENDANCE VIEW ---
+    function AttendanceView({ summary }) {
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Course Attendance Tracker</h2>
+            <p className="text-xs text-slate-400">University regulations require a minimum of 75% attendance to sit for final semester examinations.</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-400 uppercase font-bold border-b border-slate-100 dark:border-slate-700">
+                  <tr>
+                    <th className="p-4">Course</th>
+                    <th className="p-4 text-center">Total Classes</th>
+                    <th className="p-4 text-center">Present</th>
+                    <th className="p-4 text-center">Absent</th>
+                    <th className="p-4 text-center">Attendance Rate</th>
+                    <th className="p-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {summary.map((item) => (
+                    <tr key={item.courseId} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                      <td className="p-4 font-semibold">
+                        <div>{item.courseCode}</div>
+                        <div className="text-[11px] text-slate-400 font-normal">{item.courseTitle}</div>
+                      </td>
+                      <td className="p-4 text-center font-bold">{item.total}</td>
+                      <td className="p-4 text-center text-emerald-600 font-bold">{item.present}</td>
+                      <td className="p-4 text-center text-rose-500 font-bold">{item.total - item.present}</td>
+                      <td className="p-4 text-center">
+                        <span className={`font-extrabold ${item.warning ? 'text-rose-500' : 'text-emerald-600'}`}>
+                          {item.percentage}%
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {item.warning ? (
+                          <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 font-bold text-[10px]">
+                            Below 75% (Warning)
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 font-bold text-[10px]">
+                            Eligible
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- RESULTS VIEW ---
+    function ResultsView({ results, semesterGPA, overallCGPA }) {
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold">Academic Transcript & Results</h2>
+              <p className="text-xs text-slate-400">Automated CGPA calculation engine based on approved credits and grade points.</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="px-4 py-2 bg-brand-50 dark:bg-brand-900/40 rounded-xl text-center">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Semester 5 GPA</span>
+                <p className="text-lg font-black text-brand-600">{semesterGPA}</p>
+              </div>
+              <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-xl text-center">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Overall CGPA</span>
+                <p className="text-lg font-black text-indigo-600">{overallCGPA}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-400 uppercase font-bold border-b border-slate-100 dark:border-slate-700">
+                  <tr>
+                    <th className="p-4">Semester</th>
+                    <th className="p-4">Course</th>
+                    <th className="p-4 text-center">Credits</th>
+                    <th className="p-4 text-center">Marks</th>
+                    <th className="p-4 text-center">Grade</th>
+                    <th className="p-4 text-center">Grade Point</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {results.map((res, i) => (
+                    <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                      <td className="p-4 font-bold text-slate-400">Sem {res.semester}</td>
+                      <td className="p-4">
+                        <div className="font-bold">{res.code}</div>
+                        <div className="text-[11px] text-slate-400">{res.title}</div>
+                      </td>
+                      <td className="p-4 text-center font-semibold">{res.credit.toFixed(1)}</td>
+                      <td className="p-4 text-center font-bold">{res.marks}</td>
+                      <td className="p-4 text-center">
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded font-bold">
+                          {res.grade}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center font-extrabold text-brand-600">{res.gradePoint.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- CLASS ROUTINE VIEW ---
+    function RoutineView({ routine }) {
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Weekly Class Routine</h2>
+            <p className="text-xs text-slate-400">Scheduled classroom & lab sessions for Computer Science & Engineering.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday'].map(day => {
+              const classes = routine.filter(r => r.day === day);
+              return (
+                <div key={day} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                  <h3 className="font-bold text-sm text-brand-600 dark:text-brand-400 mb-3 flex items-center gap-2">
+                    <Icon name="calendar" className="w-4 h-4" /> {day}
+                  </h3>
+                  {classes.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No scheduled lectures.</p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {classes.map((cls, idx) => (
+                        <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl text-xs">
+                          <div className="flex justify-between font-bold">
+                            <span>{cls.code}: {cls.title}</span>
+                            <span className="text-indigo-600 dark:text-indigo-400">{cls.time}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">
+                            Venue: {cls.room} • Faculty: {cls.teacher}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // --- ASSIGNMENTS VIEW ---
+    function AssignmentsView({ assignments, user, onUpdateAssignments }) {
+      const [newTitle, setNewTitle] = useState('');
+      const [newCourse, setNewCourse] = useState('CSE-311');
+      const [newDeadline, setNewDeadline] = useState('');
+      const [newDesc, setNewDesc] = useState('');
+      const [showCreate, setShowCreate] = useState(false);
+
+      const handleSubmitWork = (id) => {
+        const updated = assignments.map(a => a.id === id ? { ...a, status: 'Submitted' } : a);
+        onUpdateAssignments(updated);
+        alert('Assignment submitted successfully!');
+      };
+
+      const handleCreate = (e) => {
+        e.preventDefault();
+        const newA = {
+          id: 'a_' + Date.now(),
+          course: newCourse,
+          title: newTitle,
+          deadline: newDeadline || '2026-11-10',
+          status: 'Pending',
+          description: newDesc
+        };
+        onUpdateAssignments([newA, ...assignments]);
+        setShowCreate(false);
+        setNewTitle('');
+        setNewDesc('');
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold">Course Assignments</h2>
+              <p className="text-xs text-slate-400">View tasks, submit deliverables, and track grades.</p>
+            </div>
+            {user.role !== 'STUDENT' && (
+              <button
+                onClick={() => setShowCreate(!showCreate)}
+                className="px-4 py-2 bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 hover:bg-brand-700"
+              >
+                <Icon name="plus" className="w-4 h-4" /> Create Assignment
+              </button>
+            )}
+          </div>
+
+          {showCreate && (
+            <form onSubmit={handleCreate} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-brand-200 dark:border-brand-900 space-y-3">
+              <h3 className="text-sm font-bold">Create New Assignment</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Assignment Title"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs"
+                  required
+                />
+                <input
+                  type="date"
+                  value={newDeadline}
+                  onChange={(e) => setNewDeadline(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs"
+                  required
+                />
+              </div>
+              <textarea
+                placeholder="Description & instructions..."
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs h-20"
+                required
+              />
+              <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Save Assignment</button>
+            </form>
+          )}
+
+          <div className="space-y-3">
+            {assignments.map((item) => (
+              <div key={item.id} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-900/40 text-brand-600 font-bold text-[10px]">
+                      {item.course}
+                    </span>
+                    <h3 className="font-bold text-sm">{item.title}</h3>
+                  </div>
+                  <p className="text-xs text-slate-400">{item.description}</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Deadline: <span className="text-rose-500">{item.deadline}</span></p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    item.status === 'Graded' ? 'bg-emerald-100 text-emerald-700' :
+                    item.status === 'Submitted' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {item.status} {item.score ? `(${item.score}/100)` : ''}
+                  </span>
+
+                  {user.role === 'STUDENT' && item.status === 'Pending' && (
+                    <button
+                      onClick={() => handleSubmitWork(item.id)}
+                      className="px-4 py-1.5 bg-brand-600 text-white font-bold text-xs rounded-xl hover:bg-brand-700 transition"
+                    >
+                      Submit Work
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // --- NOTICE BOARD VIEW ---
+    function NoticesView({ notices, user, onAddNotice }) {
+      const [title, setTitle] = useState('');
+      const [content, setContent] = useState('');
+      const [category, setCategory] = useState('Academic');
+      const [showForm, setShowForm] = useState(false);
+
+      const handleAdd = (e) => {
+        e.preventDefault();
+        onAddNotice({
+          id: 'n_' + Date.now(),
+          title,
+          content,
+          category,
+          date: new Date().toISOString().split('T')[0],
+          author: user.fullName
+        });
+        setTitle('');
+        setContent('');
+        setShowForm(false);
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold">University Notice Board</h2>
+              <p className="text-xs text-slate-400">Official circulars, examination schedules, and campus announcements.</p>
+            </div>
+            {user.role !== 'STUDENT' && (
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="px-4 py-2 bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center gap-2"
+              >
+                <Icon name="plus" className="w-4 h-4" /> Publish Notice
+              </button>
+            )}
+          </div>
+
+          {showForm && (
+            <form onSubmit={handleAdd} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-brand-200 dark:border-brand-900 space-y-3">
+              <h3 className="text-sm font-bold">Publish Official Notice</h3>
+              <input
+                type="text"
+                placeholder="Notice Headline"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs"
+                required
+              />
+              <textarea
+                placeholder="Notice detailed description..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs h-24"
+                required
+              />
+              <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Broadcast</button>
+            </form>
+          )}
+
+          <div className="space-y-3">
+            {notices.map((n) => (
+              <div key={n.id} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-2">
+                <div className="flex justify-between items-start">
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase">
+                    {n.category}
+                  </span>
+                  <span className="text-xs text-slate-400">{n.date}</span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{n.title}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">{n.content}</p>
+                <p className="text-[11px] text-slate-400 italic">Issued by: {n.author}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // --- SMART NOTES VIEW ---
+    function NotesView({ notes, onUpdateNotes }) {
+      const [title, setTitle] = useState('');
+      const [category, setCategory] = useState('Database');
+      const [tags, setTags] = useState('');
+      const [content, setContent] = useState('');
+      const [showForm, setShowForm] = useState(false);
+
+      const handleAddNote = (e) => {
+        e.preventDefault();
+        const note = {
+          id: 'nt_' + Date.now(),
+          title,
+          category,
+          tags,
+          content
+        };
+        onUpdateNotes([note, ...notes]);
+        setTitle('');
+        setContent('');
+        setTags('');
+        setShowForm(false);
+      };
+
+      const handleDelete = (id) => {
+        onUpdateNotes(notes.filter(n => n.id !== id));
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold">Personal Academic Notes</h2>
+              <p className="text-xs text-slate-400">Organize your subject notes, revision summaries, and cheat sheets.</p>
+            </div>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-4 py-2 bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center gap-2"
+            >
+              <Icon name="plus" className="w-4 h-4" /> Add Note
+            </button>
+          </div>
+
+          {showForm && (
+            <form onSubmit={handleAddNote} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-brand-200 dark:border-brand-900 space-y-3">
+              <h3 className="text-sm font-bold">Add Note</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Note Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Tags (e.g. sql, os, deadlock)"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs"
+                />
+              </div>
+              <textarea
+                placeholder="Note Content / Markdown..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs h-24"
+                required
+              />
+              <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Save Note</button>
+            </form>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {notes.map((n) => (
+              <div key={n.id} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600">{n.category}</span>
+                    <button onClick={() => handleDelete(n.id)} className="text-slate-400 hover:text-rose-500">
+                      <Icon name="trash" className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <h4 className="font-bold text-sm mb-2">{n.title}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-300 whitespace-pre-wrap">{n.content}</p>
+                </div>
+                {n.tags && (
+                  <div className="mt-4 pt-2 border-t border-slate-100 dark:border-slate-700 flex gap-1">
+                    {n.tags.split(',').map((t, idx) => (
+                      <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500">
+                        #{t.trim()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // --- AI CHAT VIEW (STUDY ASSISTANT) ---
+    function AIChatView() {
+      const [messages, setMessages] = useState([
+        {
+          id: 'm1',
+          sender: 'assistant',
+          text: 'Hello Alex! I am your SmartCampus AI Academic Assistant. Ask me anything about Data Structures, DBMS, OS, Computer Networks, or Software Engineering.'
+        }
+      ]);
+      const [input, setInput] = useState('');
+      const [isThinking, setIsThinking] = useState(false);
+
+      const generateAIResponse = (query) => {
+        const q = query.toLowerCase();
+        if (q.includes('bcnf') || q.includes('normalization') || q.includes('database')) {
+          return `### Database Normalization & BCNF\n\n1. **BCNF (Boyce-Codd Normal Form)**:\n   A relation $R$ is in BCNF if for every non-trivial functional dependency $X \\rightarrow Y$, $X$ is a **Super Key**.\n2. **Difference with 3NF**:\n   3NF permits $Y$ to be a prime attribute even if $X$ is not a super key. BCNF strictly eliminates all anomalies arising from non-super key determinants.`;
+        }
+        if (q.includes('deadlock') || q.includes('os') || q.includes('process')) {
+          return `### OS Deadlock: 4 Necessary Coffman Conditions\n\n1. **Mutual Exclusion**: Non-shareable resource allocation.\n2. **Hold and Wait**: Process holding resources while waiting for more.\n3. **No Preemption**: Resources cannot be forcibly taken away.\n4. **Circular Wait**: A closed loop of processes waiting for chained resources.\n\n*Solution*: Use Dijkstra's Banker's Algorithm for avoidance.`;
+        }
+        return `### Academic Concept Explanation: "${query}"\n\n- **Fundamental Concept**: In CSE and engineering systems, this relates to core algorithmic efficiency and systemic guarantees.\n- **Exam Strategy**: Always define the principle, state worst-case complexity ($O(N)$ or $O(\\log N)$), and provide a concrete trace diagram.`;
+      };
+
+      const handleSend = (e) => {
+        e.preventDefault();
+        if (!input.trim() || isThinking) return;
+
+        const userMsg = { id: 'u_' + Date.now(), sender: 'user', text: input };
+        setMessages(prev => [...prev, userMsg]);
+        const currentQuery = input;
+        setInput('');
+        setIsThinking(true);
+
+        setTimeout(() => {
+          const aiMsg = {
+            id: 'a_' + Date.now(),
+            sender: 'assistant',
+            text: generateAIResponse(currentQuery)
+          };
+          setMessages(prev => [...prev, aiMsg]);
+          setIsThinking(false);
+        }, 600);
+      };
+
+      return (
+        <div className="max-w-4xl mx-auto h-[calc(100vh-10rem)] flex flex-col bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-brand-50 dark:bg-brand-900/40 text-brand-600 rounded-xl">
+                <Icon name="bot" className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm">AI Study Assistant</h3>
+                <span className="text-[11px] text-emerald-500 font-semibold">● Ready for syllabus tutoring</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setMessages([messages[0]])}
+              className="p-2 text-slate-400 hover:text-rose-500"
+              title="Clear Chat"
+            >
+              <Icon name="trash" className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs md:text-sm">
+            {messages.map((m) => (
+              <div key={m.id} className={`flex gap-3 max-w-2xl ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+                <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center font-bold text-xs ${
+                  m.sender === 'user' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-brand-600'
+                }`}>
+                  {m.sender === 'user' ? 'A' : <Icon name="bot" className="w-4 h-4" />}
+                </div>
+                <div className={`p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
+                  m.sender === 'user'
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-700'
+                }`}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {isThinking && (
+              <div className="flex gap-3 text-xs text-slate-400 items-center">
+                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                  <Icon name="bot" className="w-4 h-4 text-brand-600 animate-pulse" />
+                </div>
+                Thinking & generating academic response...
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSend} className="p-3 border-t border-slate-100 dark:border-slate-700 flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask an academic question (e.g. BCNF vs 3NF, or Deadlock conditions)..."
+              className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            <button
+              type="submit"
+              disabled={isThinking || !input.trim()}
+              className="px-4 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold hover:bg-brand-700 disabled:opacity-50"
+            >
+              <Icon name="send" className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    // --- AI QUIZ GENERATOR VIEW ---
+    function AIQuizView({ history, onSaveResult }) {
+      const [topic, setTopic] = useState('Database Management Systems');
+      const [difficulty, setDifficulty] = useState('Medium');
+      const [activeQuestions, setActiveQuestions] = useState(null);
+      const [currentIdx, setCurrentIdx] = useState(0);
+      const [selectedOptions, setSelectedOptions] = useState({});
+      const [isFinished, setIsFinished] = useState(false);
+      const [score, setScore] = useState(0);
+
+      const QUESTION_BANK = {
+        'Database Management Systems': [
+          {
+            q: 'Which normal form eliminates partial functional dependencies on candidate keys?',
+            options: ['1NF', '2NF', '3NF', 'BCNF'],
+            ans: '2NF',
+            exp: '2NF requires relation to be in 1NF and no non-prime attribute should be partially dependent on any candidate key.'
+          },
+          {
+            q: 'What is the standard time complexity for search in a balanced B+ Tree of order m with N keys?',
+            options: ['O(N)', 'O(log N)', 'O(N log N)', 'O(1)'],
+            ans: 'O(log N)',
+            exp: 'B+ Tree lookups traverse from root to leaf in O(log_m N) time.'
+          },
+          {
+            q: 'Which ACID property is guaranteed by the Write-Ahead Logging (WAL) protocol?',
+            options: ['Atomicity & Durability', 'Isolation', 'Consistency', 'Replication'],
+            ans: 'Atomicity & Durability',
+            exp: 'WAL ensures all updates are written to disk before transactions commit, guaranteeing recovery.'
+          }
+        ]
+      };
+
+      const handleStart = (e) => {
+        e.preventDefault();
+        const questions = QUESTION_BANK[topic] || QUESTION_BANK['Database Management Systems'];
+        setActiveQuestions(questions);
+        setCurrentIdx(0);
+        setSelectedOptions({});
+        setIsFinished(false);
+      };
+
+      const handleSelect = (opt) => {
+        if (selectedOptions[currentIdx]) return;
+        setSelectedOptions({ ...selectedOptions, [currentIdx]: opt });
+      };
+
+      const handleFinish = () => {
+        let sc = 0;
+        activeQuestions.forEach((q, i) => {
+          if (selectedOptions[i] === q.ans) sc++;
+        });
+        setScore(sc);
+        setIsFinished(true);
+        onSaveResult({
+          topic,
+          score: sc,
+          total: activeQuestions.length,
+          percentage: Math.round((sc / activeQuestions.length) * 100),
+          date: new Date().toISOString().split('T')[0]
+        });
+      };
+
+      return (
+        <div className="max-w-3xl mx-auto space-y-6">
+          {!activeQuestions && (
+            <div className="p-6 md:p-8 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-brand-50 dark:bg-brand-900/40 text-brand-600 rounded-2xl">
+                  <Icon name="quiz" className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">AI Practice Quiz Generator</h2>
+                  <p className="text-xs text-slate-400">Generate interactive multiple-choice test sets for exam self-assessment.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleStart} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold uppercase text-slate-400 mb-1">Subject / Domain</label>
+                  <select
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl"
+                  >
+                    <option value="Database Management Systems">Database Management Systems</option>
+                    <option value="Operating Systems">Operating Systems & Kernels</option>
+                    <option value="Computer Networks">Computer Networks & OSI Model</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase text-slate-400 mb-1">Difficulty Level</label>
+                  <select
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value)}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl"
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium (University Standard)</option>
+                    <option value="Hard">Hard (Final Honours Exam)</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="w-full py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700">
+                  Generate Quiz Now
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* ACTIVE QUIZ SCREEN */}
+          {activeQuestions && !isFinished && (
+            <div className="p-6 md:p-8 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-6">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-brand-600 uppercase">Question {currentIdx + 1} of {activeQuestions.length}</span>
+                <span className="text-slate-400">{topic}</span>
+              </div>
+
+              <h3 className="font-bold text-base text-slate-800 dark:text-slate-100">
+                {activeQuestions[currentIdx].q}
+              </h3>
+
+              <div className="space-y-2.5">
+                {activeQuestions[currentIdx].options.map((opt, i) => {
+                  const isSelected = selectedOptions[currentIdx] === opt;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleSelect(opt)}
+                      className={`w-full text-left p-3.5 rounded-xl border text-xs font-semibold transition ${
+                        isSelected
+                          ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300'
+                          : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button
+                  disabled={currentIdx === 0}
+                  onClick={() => setCurrentIdx(currentIdx - 1)}
+                  className="text-xs font-bold text-slate-400 disabled:opacity-30"
+                >
+                  Previous
+                </button>
+
+                {currentIdx < activeQuestions.length - 1 ? (
+                  <button
+                    disabled={!selectedOptions[currentIdx]}
+                    onClick={() => setCurrentIdx(currentIdx + 1)}
+                    className="px-5 py-2 bg-brand-600 text-white font-bold text-xs rounded-xl disabled:opacity-40"
+                  >
+                    Next Question
+                  </button>
+                ) : (
+                  <button
+                    disabled={!selectedOptions[currentIdx]}
+                    onClick={handleFinish}
+                    className="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl disabled:opacity-40"
+                  >
+                    Submit Quiz
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* QUIZ RESULT SCORECARD */}
+          {isFinished && (
+            <div className="p-8 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm text-center space-y-5">
+              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-2xl">
+                {score}/{activeQuestions.length}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Quiz Complete!</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  You scored {Math.round((score / activeQuestions.length) * 100)}% on {topic}.
+                </p>
+              </div>
+
+              <div className="space-y-3 text-left">
+                {activeQuestions.map((q, i) => (
+                  <div key={i} className="p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl text-xs">
+                    <p className="font-bold">{q.q}</p>
+                    <p className="mt-1 text-slate-500">
+                      Your answer: <span className={selectedOptions[i] === q.ans ? 'text-emerald-600 font-bold' : 'text-rose-500 font-bold'}>{selectedOptions[i]}</span>
+                    </p>
+                    {selectedOptions[i] !== q.ans && (
+                      <p className="text-emerald-600">Correct: {q.ans}</p>
+                    )}
+                    <p className="mt-1 text-[11px] text-slate-400 italic">{q.exp}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setActiveQuestions(null)}
+                className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
+              >
+                Take Another Quiz
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // --- TEACHER: ATTENDANCE MANAGEMENT ---
+    function TeacherAttendanceView({ db, onUpdateAttendance }) {
+      const toggleAttendance = (courseId, increment) => {
+        const updated = db.attendance.map(a => {
+          if (a.courseId === courseId) {
+            const nextPresent = increment ? Math.min(a.total + 1, a.present + 1) : Math.max(0, a.present - 1);
+            return { ...a, total: a.total + (increment ? 1 : 0), present: nextPresent };
+          }
+          return a;
+        });
+        onUpdateAttendance(updated);
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Teacher: Daily Course Attendance Sheet</h2>
+            <p className="text-xs text-slate-400">Mark presence or update roster records for registered sections.</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-400 uppercase font-bold border-b border-slate-100 dark:border-slate-700">
+                <tr>
+                  <th className="p-4">Course</th>
+                  <th className="p-4 text-center">Total Sessions</th>
+                  <th className="p-4 text-center">Student Present</th>
+                  <th className="p-4 text-center">Quick Mark</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                {db.courses.map((c) => {
+                  const att = db.attendance.find(a => a.courseId === c.id) || { total: 0, present: 0 };
+                  return (
+                    <tr key={c.id}>
+                      <td className="p-4 font-bold">
+                        {c.code} - {c.title}
+                      </td>
+                      <td className="p-4 text-center font-bold">{att.total}</td>
+                      <td className="p-4 text-center text-emerald-600 font-bold">{att.present}</td>
+                      <td className="p-4 text-center space-x-2">
+                        <button
+                          onClick={() => toggleAttendance(c.id, true)}
+                          className="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-bold rounded-lg"
+                        >
+                          + Mark Present
+                        </button>
+                        <button
+                          onClick={() => toggleAttendance(c.id, false)}
+                          className="px-3 py-1 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-bold rounded-lg"
+                        >
+                          - Mark Absent
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // --- TEACHER: UPLOAD RESULTS ---
+    function TeacherResultsView({ db, onAddResult }) {
+      const [courseCode, setCourseCode] = useState('CSE-311');
+      const [marks, setMarks] = useState(85);
+      const [semester, setSemester] = useState(6);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const m = Number(marks);
+        let grade = 'F';
+        let gradePoint = 0.0;
+        if (m >= 80) { grade = 'A+'; gradePoint = 4.0; }
+        else if (m >= 75) { grade = 'A'; gradePoint = 3.75; }
+        else if (m >= 70) { grade = 'A-'; gradePoint = 3.5; }
+        else if (m >= 65) { grade = 'B+'; gradePoint = 3.25; }
+        else if (m >= 60) { grade = 'B'; gradePoint = 3.0; }
+
+        const course = db.courses.find(c => c.code === courseCode) || db.courses[0];
+        onAddResult({
+          semester: Number(semester),
+          code: course.code,
+          title: course.title,
+          credit: course.credits,
+          marks: m,
+          grade,
+          gradePoint
+        });
+        alert(`Recorded result for Alex Vance (${course.code}): Grade ${grade} (${gradePoint.toFixed(2)})`);
+      };
+
+      return (
+        <div className="space-y-6 max-w-2xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Teacher: Student Marks & Grade Submission</h2>
+            <p className="text-xs text-slate-400">Input semester marks; GPA and Grade Point will be calculated automatically.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-400 uppercase mb-1">Student</label>
+              <input type="text" disabled value="Alex Vance (CSE-2024-001)" className="w-full p-3 bg-slate-100 dark:bg-slate-700 rounded-xl" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-400 uppercase mb-1">Course</label>
+                <select value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                  {db.courses.map(c => (
+                    <option key={c.id} value={c.code}>{c.code} - {c.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-400 uppercase mb-1">Semester</label>
+                <input type="number" min="1" max="8" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-400 uppercase mb-1">Total Marks Obtained (out of 100)</label>
+              <input type="number" min="0" max="100" value={marks} onChange={(e) => setMarks(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl" />
+            </div>
+
+            <button type="submit" className="w-full py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700">
+              Compute & Publish Result
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    // --- ADMIN: USERS VIEW ---
+    function AdminUsersView({ users, onAddUser, onDeleteUser }) {
+      const [name, setName] = useState('');
+      const [email, setEmail] = useState('');
+      const [role, setRole] = useState('STUDENT');
+
+      const handleAdd = (e) => {
+        e.preventDefault();
+        onAddUser({
+          id: 'u_' + Date.now(),
+          fullName: name,
+          email,
+          role,
+          dept: 'CSE',
+          batch: '55th',
+          semester: 1
+        });
+        setName('');
+        setEmail('');
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Admin: User Directory & Authorization</h2>
+            <p className="text-xs text-slate-400">Manage Students, Faculty, and Administrative accounts.</p>
+          </div>
+
+          <form onSubmit={handleAdd} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-wrap gap-3 text-xs">
+            <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="flex-1 min-w-[150px] p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl" required />
+            <input type="email" placeholder="Institutional Email" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1 min-w-[150px] p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl" required />
+            <select value={role} onChange={(e) => setRole(e.target.value)} className="p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl font-bold">
+              <option value="STUDENT">STUDENT</option>
+              <option value="TEACHER">TEACHER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <button type="submit" className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl">Add User</button>
+          </form>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-400 uppercase font-bold border-b border-slate-100 dark:border-slate-700">
+                <tr>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4 text-center">Role</th>
+                  <th className="p-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                {users.map(u => (
+                  <tr key={u.id}>
+                    <td className="p-4 font-bold">{u.fullName}</td>
+                    <td className="p-4 text-slate-400">{u.email}</td>
+                    <td className="p-4 text-center">
+                      <span className="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-100 dark:bg-slate-700">
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <button onClick={() => onDeleteUser(u.id)} className="text-slate-400 hover:text-rose-500">
+                        <Icon name="trash" className="w-4 h-4 mx-auto" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // --- ADMIN: COURSES VIEW ---
+    function AdminCoursesView({ courses, onAddCourse }) {
+      const [code, setCode] = useState('');
+      const [title, setTitle] = useState('');
+      const [credits, setCredits] = useState(3.0);
+
+      const handleAdd = (e) => {
+        e.preventDefault();
+        onAddCourse({
+          id: 'c_' + Date.now(),
+          code,
+          title,
+          credits: Number(credits),
+          teacher: 'Assigned Faculty'
+        });
+        setCode('');
+        setTitle('');
+      };
+
+      return (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div>
+            <h2 className="text-xl font-bold">Admin: Curriculum & Course Directory</h2>
+            <p className="text-xs text-slate-400">Configure academic subjects, syllabus credits, and course allocations.</p>
+          </div>
+
+          <form onSubmit={handleAdd} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-wrap gap-3 text-xs">
+            <input type="text" placeholder="Course Code (e.g. CSE-421)" value={code} onChange={(e) => setCode(e.target.value)} className="w-36 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl" required />
+            <input type="text" placeholder="Course Title" value={title} onChange={(e) => setTitle(e.target.value)} className="flex-1 min-w-[200px] p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl" required />
+            <input type="number" step="0.5" placeholder="Credits" value={credits} onChange={(e) => setCredits(e.target.value)} className="w-24 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl" required />
+            <button type="submit" className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl">Add Course</button>
+          </form>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {courses.map(c => (
+              <div key={c.id} className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex justify-between items-center">
+                <div>
+                  <span className="text-[10px] font-bold text-brand-600 uppercase">{c.code}</span>
+                  <h4 className="font-bold text-sm mt-0.5">{c.title}</h4>
+                  <p className="text-xs text-slate-400 mt-1">Instructor: {c.teacher || 'Unassigned'}</p>
+                </div>
+                <span className="px-3 py-1 bg-brand-50 dark:bg-brand-900/40 text-brand-600 font-extrabold text-xs rounded-xl">
+                  {c.credits.toFixed(1)} Credits
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Mount Root
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
